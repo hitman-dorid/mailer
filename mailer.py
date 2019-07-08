@@ -10,7 +10,7 @@
 # FACEBOOK : https://www.facebook.com/mosheur.rahman.anik
 # GITHUB : https://github.com/hitman-dorid/mailer
 import sys, time, smtplib, socket, os, argparse
-
+from email.mime.text import MIMEText as txt
 banner = """
 \033[32m
     _ ___    __ _
@@ -28,52 +28,95 @@ gmail = ['smtp.gmail.com',587]
 yahoo = ['smtp.mail.yahoo.com',587]
 outlook = ['smtp-mail.outlook.com',587]
 
-def main (id, pas, target, msg, ser_name, ser_port):
+def main (id, pas, target, msg, ser_name, ser_port,spam):
 	"""
 	EMAIL CLIENT SIDE FUNCTION
 
 	"""
-	try:
+	if spam:
 		os.system('clear')
 		writer (banner)
-		writer (f'\033[32m\nconnecting with {ser_name}\n\033[0m')
-		client = smtplib.SMTP(ser_name,ser_port)
-		writer (f'\033[32m\nconneted with {ser_name}\n\033[0m')
-		writer ('\033[32m\nchacking connection power...\n\n\033[0m')
-		client.ehlo()
-		writer ('\033[32m\n\nchacked\n\033[0m')
-		writer (f'\033[32m\nstarting TLS incription at {ser_name}\n\033[0m')
-		client.starttls()
-		writer (f'\033[32m\nincription started at {ser_name}\n\033[0m')
-		writer (f'\033[32m\nlogging in {id}\n\033[0m')
-		client.login(id, pas)
-		writer (f'\033[32m\nsucsessfuly loged in {id}\n\033[0m')
-		writer ('\033[32m\nsending mail\n\033[0m')
-		client.sendmail(id, target, msg)
-		writer ('\033[32m\nmail sent\n\033[0m')
-		writer ('\033[32m\nclosing connection \n\033[0m')
-		client.quit()
-		writer ('\033[32m\ncolsed\n\033[0m')
+		for i in range (20):
+			try:
+				client = smtplib.SMTP(ser_name,ser_port)
+				client.ehlo()
+				client.starttls()
+				client.login(id,pas)
+				client.sendmail(id,target,msg)
+				client.quit()
+				writer (f'\n\033[32m[+] {i+1} msg sent\033[0m\n')
+			except socket.gaierror:
+				writer ('\n\033[31m\nno internet\n\033[0m')
+				break
+			except smtplib.SMTPAuthenticationError:
+				writer ('\033[31m\nemail/pass error\n\033[0m')
+				break
+			except smtplib.SMTPServerDisconnected:
+				writer ('\033[31m\nserver disconnected\n\033[0m')
+				break
+			except TypeError:
+				writer ('\n\033[31mtype error! please chack your args\n\033[0m')
+				break
+			except KeyboardInterrupt:
+				writer ('\033[31m\ncanceled by user\n\033[0m')
+				break
+			except EOFError:
+				writer ('\033[31m\ncanceled by user\n\033[0m')
+				break
+	else:
+		try:
+			os.system('clear')
+			writer (banner)
+			writer (f'\033[32m\nconnecting with {ser_name}\n\033[0m')
+			client = smtplib.SMTP(ser_name,ser_port)
+			writer (f'\033[32m\nconneted with {ser_name}\n\033[0m')
+			writer ('\033[32m\nchacking connection power...\n\n\033[0m')
+			client.ehlo()
+			writer ('\033[32m\n\nchacked\n\033[0m')
+			writer (f'\033[32m\nstarting TLS incription at {ser_name}\n\033[0m')
+			client.starttls()
+			writer (f'\033[32m\nincription started at {ser_name}\n\033[0m')
+			writer (f'\033[32m\nlogging in {id}\n\033[0m')
+			client.login(id, pas)
+			writer (f'\033[32m\nsucsessfuly loged in {id}\n\033[0m')
+			writer ('\033[32m\nsending mail\n\033[0m')
+			client.sendmail(id, target, msg)
+			writer ('\033[32m\nmail sent\n\033[0m')
+			writer ('\033[32m\nclosing connection \n\033[0m')
+			client.quit()
+			writer ('\033[32m\ncolsed\n\033[0m')
 
-	except socket.gaierror:
-		writer ('\n\033[31m\nno internet\n\033[0m')
-	except smtplib.SMTPAuthenticationError:
-		writer ('\033[31m\nemail/pass error\n\033[0m')
-	except smtplib.SMTPServerDisconnected:
-		writer ('\033[31m\nserver disconnected\n\033[0m')
-	except TypeError:
-		writer ('\n\033[31mtype error! please chack your args\n\033[0m')
+		except socket.gaierror:
+			writer ('\n\033[31m\nno internet\n\033[0m')
+		except smtplib.SMTPAuthenticationError:
+			writer ('\033[31m\nemail/pass error\n\033[0m')
+		except smtplib.SMTPServerDisconnected:
+			writer ('\033[31m\nserver disconnected\n\033[0m')
+		except TypeError:
+			writer ('\n\033[31mtype error! please chack your args\n\033[0m')
+
+		except KeyboardInterrupt:
+			writer ('\033[31m\ncanceled by user\n\033[0m')
+		except EOFError:
+			writer ('\033[31m\ncanceled by user\n\033[0m')
 
 
 def writer (data):
 	"""
 	DATA WRITER
 	"""
-	for content in data:
-		sys.stdout.write(content)
-		time.sleep(0.01)
-		sys.stdout.flush()
+	try:
 
+		for content in data:
+			sys.stdout.write(content)
+			time.sleep(0.01)
+			sys.stdout.flush()
+	except KeyboardInterrupt:
+		writer ('\033[31m\ncanceled by user\n\033[0m')
+		sys.exit(0)
+	except EOFError:
+		writer ('\033[31m\ncanceled by user\n\033[0m')
+		sys.exit(0)
 
 def service_handler (service_name):
 	"""
@@ -152,19 +195,36 @@ def args ():
 	par.add_argument('-p','--pas',type=str,metavar='',help='used to put user passrord\n')
 	par.add_argument('-t','--target',type=str,metavar='',help='used to put an target\n')
 	par.add_argument('-m','--msg',type=str,metavar='',help='used to put the message\n')
-	par.add_argument('-sa','--s_address',type=str,metavar='',help='used given server address manualy name\n')
-	par.add_argument('-sp','--s_port',type=str,metavar='',help='used to put port for manualy specified  address\n')
-
+	par.add_argument('-sra','--s_address',type=str,metavar='',help='used to given server address manualy name\n')
+	par.add_argument('-srp','--s_port',type=str,metavar='',help='used to put port for manualy specified  address\n')
+	par.add_argument('-sub','--subject',type=str,metavar='',help='used to put a subject')
+	group = par.add_mutually_exclusive_group()
+	group.add_argument('-sp','--spam',action='store_true',help='used for spamming')
 	args = par.parse_args()
-	return args.id,args.pas,args.target,args.msg,args.s_address,args.s_port
+	return args.id,args.pas,args.target,args.msg,args.subject,args.s_address,args.s_port,args.spam
 
+
+def sub_handler (msg,sub,id,target):
+
+	"""
+	HANDLING MESSAGE!
+	"""
+	if sub == None:
+		sub = 'mailer has you'
+	else:
+		pass
+	m = txt (msg)
+	m['Subject'] = sub
+	m['From'] = id
+	m['To'] = target
+	return m.as_string()
 
 def arg_controler():
 
 	"""
 	PUTING ARGUMENTS AT THE RIGHT PLACE!
 	"""
-	id,pas,target,msg,sa,sp = args()
+	id,pas,target,msg,sub,sa,sp,spam = args()
 	if id ==None and pas==None and target == None and msg == None and sa == None and sp == None:
 		input_handler()
 		sys.exit(0)
@@ -190,8 +250,11 @@ def arg_controler():
 				writer ('\n\033[32menter port:\n\033[0m')
 				sp = input ('\033[32m\n>> \033[0m')
 			else:
-				writer ('\n\033[31munknowen error\n\033[0m')
-		main (id,pas,target,msg,sa,sp)
+				pass
+		msg = sub_handler (msg,sub,id,target)
+		main (id,pas,target,msg,sa,sp,spam)
 	sys.exit(0)
-arg_controler()
 
+if __name__ == '__main__':
+
+	arg_controler()
